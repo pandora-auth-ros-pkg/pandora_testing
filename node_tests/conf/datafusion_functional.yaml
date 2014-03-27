@@ -1,0 +1,6 @@
+mock_topics: 
+{ topicnames : ['datafusionMsgTopic'] , messageTypes: [datafusion] , messagePackages: [datafusion_communications] }
+
+  
+  
+
