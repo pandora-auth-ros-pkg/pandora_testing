@@ -11,6 +11,8 @@ find_package(catkin REQUIRED COMPONENTS
             rostest
             rosbag
             node_tests_msgs
+            data_fusion_communications
+            vision_communications
           )
 
 catkin_package(
@@ -23,6 +25,7 @@ catkin_package(
 include_directories(include ${catkin_INCLUDE_DIRS})
 add_executable(bag_player_for_tests 
   src/bag_player_for_tests.cpp 
+  src/customized_player.cpp
   )
 target_link_libraries(bag_player_for_tests ${catkin_LIBRARIES})
 add_dependencies(bag_player_for_tests node_tests_msgs_gencpp)

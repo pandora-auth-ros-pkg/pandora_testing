@@ -31,8 +31,10 @@ public:
 /**
  * Constructor
  */
-bagPlayerForTests::bagPlayerForTests(int argc, char** argv) : _ReplayBagsActionServer(_nh, "replay_bags", boost::bind(&bagPlayerForTests::executeCb, this, _1), false) , _playedBags(false) {  
-  
+bagPlayerForTests::bagPlayerForTests(int argc, char** argv) :
+  _ReplayBagsActionServer(_nh, "replay_bags",
+    boost::bind(&bagPlayerForTests::executeCb, this, _1), false) ,
+  _playedBags(false) {  
   
   _opts = parseOptions(argc, argv);
     
@@ -67,6 +69,9 @@ void bagPlayerForTests::executeCb(const node_tests_msgs::ReplayBagsGoalConstPtr 
     result.ended = true;
     ROS_INFO("BAG_REPLAY COMPLETED");
   _ReplayBagsActionServer.setSucceeded(result);
+  
+  ros::shutdown();
+  
 }
 
 /**
