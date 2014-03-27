@@ -8,7 +8,7 @@ class realSubscriber:
     self.mockSub = mockSub
   
   def callback(self,data):
-    rospy.loginfo('got data %s', data)
+    #~ rospy.loginfo('got data %s', data)
     self.mockSub.callMethod(data)
     
     

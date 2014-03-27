@@ -14,7 +14,7 @@ import bcolors
 
 from node_tests_msgs.msg import *
 
-class DaoUnitTest(unittest.TestCase):
+class SubscriberMockUnitTest(unittest.TestCase):
 
   def setUp(self):
     self.person_mocker = mox.Mox()
@@ -26,24 +26,16 @@ class DaoUnitTest(unittest.TestCase):
     for topic, msg, t in rosbag.Bag(bagfile).read_messages():    
       if topic in topicsExact :
         compList = []
-        for field in msg.__slots__:          
-          #~ compList.append(moxcomparators.fieldEquals(field[1],getattr(msg ,field[1])))
-          
-          if not field == 'header':
-            compList.append(moxcomparators.fieldEquals(field,getattr(msg ,field)))
-          
-          #~ compList.append(moxcomparators.fieldGoalEquals(field[1],getattr(msg.goal ,field[1])))
+        dao.callMethod(moxcomparators.msgEquals(msg))
         
-        dao.callMethod(moxcomparators.listAnd(compList))
-          
     self.person_mocker.ReplayAll()
     self.rsub = mocksubscriber.realSubscriber(topicsExact, messageTypeObj, dao)
     
-    client = actionlib.SimpleActionClient('/replay_bags', replayBagsAction)
+    client = actionlib.SimpleActionClient('/replay_bags', ReplayBagsAction)
     client.wait_for_server()
     rospy.loginfo('ready')
 
-    goal = replayBagsGoal()
+    goal = ReplayBagsGoal()
     goal.start = True
     client.send_goal(goal)
     client.wait_for_result()
@@ -70,14 +62,10 @@ if __name__ == '__main__':
   #~ messageGoal = messageType[:-10]+messageType[-4:]
   #~ fieldList = messageInfoParser.parseMessage(pathToMsgDeclaration + '/msg/' + messageGoal + '.msg')
 
-  print messagePackage
-  print messageType
-  print bagfile
-  print topicsExact
   #~ for i in fieldList:
     #~ print i
     
   rospy.init_node('tester')
-  suite = unittest.TestLoader().loadTestsFromTestCase(DaoUnitTest)
+  suite = unittest.TestLoader().loadTestsFromTestCase(SubscriberMockUnitTest)
   unittest.TextTestRunner(verbosity=2).run(suite)
   
