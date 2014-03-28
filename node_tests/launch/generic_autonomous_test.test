@@ -2,13 +2,13 @@
   
   <include file="$(find node_tests)/launch/bag_player_for_tests.launch" />
 
-  <test test-name="subscriber" pkg="node_tests" 
-        type="generic_mock.py" name="datafusion_mock_tester" 
-        args = "vision_communications
-                HolesDirectionsVectorMsg 
-                $(find node_tests)/bags/new.bag 
-                /data_fusion/victim_fusion/hole_direction_alert
-                $(find vision_communications) " />
+  <rosparam file="$(find node_tests)/config/subscriber_test_params.yaml" 
+    command="load" ns="/"/>
+
+  <param name="bag_filename" type="string" value="$(find node_tests)/bags/new2.bag" />
+
+  <test test-name="test_subscriber" pkg="node_tests" 
+        type="generic_mock.py" name="datafusion_mock_tester" />
     
 </launch> 
 
