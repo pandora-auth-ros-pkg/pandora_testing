@@ -1,4 +1,4 @@
-import roslib; roslib.load_manifest('node_tests')
+import roslib; roslib.load_manifest('pandora_testing_tools')
 import rospy
 
 class realSubscriber:

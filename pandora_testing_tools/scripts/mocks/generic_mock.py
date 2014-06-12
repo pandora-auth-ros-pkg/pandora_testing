@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-PKG = 'node_tests'
+PKG = 'pandora_testing_tools'
 import roslib; 
 import rospy
 import actionlib
@@ -12,7 +12,7 @@ import sys
 import mocksubscriber
 import moxcomparators
 
-from node_tests_msgs.msg import *
+from pandora_testing_tool.msg import *
 
 class SubscriberMockUnitTest(unittest.TestCase):
 
@@ -38,7 +38,7 @@ class SubscriberMockUnitTest(unittest.TestCase):
     
     #~ open a bag and register all the messages to the 
     #~ mock object of the corresponding topic (if the topic is listed in the given)
-    for topic, msg, t in rosbag.Bag(self.bagfile).read_messages():    
+    for topic, msg, t in rosbag.Bag(self.bagfile).read_messages(): 
       if topic in self.topics2MockObjects :
         self.topics2MockObjects[topic].callMethod(moxcomparators.msgEquals(msg))
     
@@ -50,7 +50,7 @@ class SubscriberMockUnitTest(unittest.TestCase):
     #~ In real testing this should be replaced by waiting for the real code to produce output
     #~ Nevertheless, the bag replay action could still be used for something else
     #~ (maybe change to service??)
-    client = actionlib.SimpleActionClient('/replay_bags', ReplayBagsAction)
+    client = actionlib.SimpleActionClient('/test/bag_player', ReplayBagsAction)
     client.wait_for_server()
 
     goal = ReplayBagsGoal()

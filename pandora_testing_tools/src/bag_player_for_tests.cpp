@@ -32,9 +32,10 @@ public:
  * Constructor
  */
 bagPlayerForTests::bagPlayerForTests(int argc, char** argv) :
-  _ReplayBagsActionServer(_nh, "replay_bags",
-    boost::bind(&bagPlayerForTests::executeCb, this, _1), false) ,
-  _playedBags(false) {  
+  _nh("/test"),
+  _ReplayBagsActionServer(_nh, "bag_player",
+    boost::bind(&bagPlayerForTests::executeCb, this, _1), false),
+  _playedBags(false) {
   
   _opts = parseOptions(argc, argv);
     
@@ -47,8 +48,6 @@ bagPlayerForTests::bagPlayerForTests(int argc, char** argv) :
       //~ ros::spinOnce();
       //~ loop_rate.sleep();
     //~ }
-
-    
 }
 
 void bagPlayerForTests::executeCb(const node_tests_msgs::ReplayBagsGoalConstPtr &goal)

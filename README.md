@@ -1,4 +1,6 @@
-testing tools
+pandora testing
 ============================
 
-tools for functional and integration testing
+- Contains tools for functional and integration testing
+
+- Contains integration tests
