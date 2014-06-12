@@ -4,11 +4,11 @@
 #include "rosgraph_msgs/Clock.h"
 #include <time.h>
 #include "ros/time.h"
-#include "node_tests_msgs/ReplayBagsAction.h"
+#include "pandora_testing_tools/ReplayBagsAction.h"
 #include <actionlib/server/simple_action_server.h>
 
 
-typedef actionlib::SimpleActionServer<node_tests_msgs::ReplayBagsAction> actionServer; 
+typedef actionlib::SimpleActionServer<pandora_testing_tools::ReplayBagsAction> actionServer; 
 
 /**
  * The stub class 
@@ -23,7 +23,7 @@ class bagPlayerForTests
 public:
   bagPlayerForTests(int, char**);
   
-  void executeCb(const node_tests_msgs::ReplayBagsGoalConstPtr &goal);
+  void executeCb(const pandora_testing_tools::ReplayBagsGoalConstPtr &goal);
 
 };
 
@@ -50,7 +50,7 @@ bagPlayerForTests::bagPlayerForTests(int argc, char** argv) :
     //~ }
 }
 
-void bagPlayerForTests::executeCb(const node_tests_msgs::ReplayBagsGoalConstPtr &goal)
+void bagPlayerForTests::executeCb(const pandora_testing_tools::ReplayBagsGoalConstPtr &goal)
 {
   ROS_INFO("BAG_REPLAY STARTED");
 
@@ -64,7 +64,7 @@ void bagPlayerForTests::executeCb(const node_tests_msgs::ReplayBagsGoalConstPtr 
       return ;
     }
     
-    node_tests_msgs::ReplayBagsResult result; 
+    pandora_testing_tools::ReplayBagsResult result; 
     result.ended = true;
     ROS_INFO("BAG_REPLAY COMPLETED");
   _ReplayBagsActionServer.setSucceeded(result);

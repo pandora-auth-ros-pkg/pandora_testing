@@ -17,6 +17,8 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   )
 
+catkin_python_setup()
+
 add_action_files(
   FILES
   ReplayBags.action
@@ -42,4 +44,4 @@ add_executable(bag_player_for_tests
   src/customized_player.cpp
   )
 target_link_libraries(bag_player_for_tests ${catkin_LIBRARIES})
-add_dependencies(bag_player_for_tests pandora_testing_tools_gencpp)
+add_dependencies(bag_player_for_tests ${PROJECT_NAME}_gencpp)

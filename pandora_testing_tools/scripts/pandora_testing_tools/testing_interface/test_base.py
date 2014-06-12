@@ -46,7 +46,8 @@ import actionlib
 import sys
 import rosbag
 
-from pandora_testing_tools.msg import ReplayBags.action
+from pandora_testing_tools.msg import ReplayBagsAction
+from pandora_testing_tools.msg import ReplayBagsGoal
 from state_manager.state_client import StateClient
 from geometry_msgs.msg import Point
 
