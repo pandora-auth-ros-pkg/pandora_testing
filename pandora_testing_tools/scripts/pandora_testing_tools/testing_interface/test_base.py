@@ -68,12 +68,14 @@ class TestBase(unittest.TestCase):
 
     def mockCallback(self, data):
 
-        self.alertList.append(data)
+        for i in range(len(self.messageTypes)):
+            if isinstance(data, self.messageTypes[i]):
+                self.messageList[i].append(data)
         self.replied = True
-        rospy.logdebug(self.alertList)
+        rospy.logdebug(data)
 
     @classmethod
-    def connect(cls):
+    def establishConnection(cls):
 
         cls.state_changer = StateClient(False)
         rospy.sleep(0.1)
@@ -82,23 +84,17 @@ class TestBase(unittest.TestCase):
 
     def connect(self, subscriber_topics, publisher_topics):
 
-        self.subscriber_topics = subscriber_topics
-        self.publisher_topics = publisher_topics
-
-        self.subscribers = []
-        for topic, messagePackage, messageType in self.subscriber_topics:
+        for topic, messagePackage, messageType in subscriber_topics:
             _temp = __import__(messagePackage+'.msg', globals(), locals(), messageType, -1)
             messageTypeObj = getattr(_temp, messageType)
+            self.messageTypes.append(messageTypeObj)
+            self.messageList.append([])
             mock_subscriber = rospy.Subscriber(
                 topic, 
                 messageTypeObj, self.mockCallback)
             self.subscribers.append(mock_subscriber)
-
-        self.alertList = []
-        self.replied = False
         
-        self.publishers = []
-        for topic, messagePackage, messageType in self.publisher_topics:
+        for topic, messagePackage, messageType in publisher_topics:
             _temp = __import__(messagePackage+'.msg', globals(), locals(), messageType, -1)
             messageTypeObj = getattr(_temp, messageType)
             mock_publisher = rospy.Publisher(topic, messageTypeObj)
@@ -108,6 +104,14 @@ class TestBase(unittest.TestCase):
         self.bag_client.wait_for_server()
         self.goal = ReplayBagsGoal()
         self.goal.start = True
+
+    def setUp(self):
+
+        self.replied = False
+        self.messageList = []
+        self.subscribers = []
+        self.messageTypes= []
+        self.publishers = []
 
     def tearDown(self):
 
