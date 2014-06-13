@@ -66,63 +66,61 @@ def direction(a, b):
 
 class TestBase(unittest.TestCase):
 
-    def mockCallback(self, data):
+    @classmethod
+    def mockCallback(cls, data):
 
-        for i in range(len(self.messageTypes)):
-            if isinstance(data, self.messageTypes[i]):
-                self.messageList[i].append(data)
-        self.replied = True
-        #rospy.logdebug(data)
+        for i in range(len(cls.messageTypes)):
+            if isinstance(data, cls.messageTypes[i]):
+                cls.messageList[i].append(data)
+        cls.replied = True
 
     @classmethod
-    def establishConnection(cls):
+    def connect(cls, subscriber_topics, publisher_topics):
 
         cls.state_changer = StateClient(False)
         rospy.sleep(0.1)
         cls.state_changer.transition_to_state(2)
         rospy.sleep(2)
 
-    def connect(self, subscriber_topics, publisher_topics):
+        cls.replied = False
+        cls.messageList = []
+        cls.subscribers = []
+        cls.messageTypes= []
+        cls.publishers = []
 
         for topic, messagePackage, messageType in subscriber_topics:
             _temp = __import__(messagePackage+'.msg', globals(), locals(), messageType, -1)
             messageTypeObj = getattr(_temp, messageType)
-            self.messageTypes.append(messageTypeObj)
-            self.messageList.append([])
+            cls.messageTypes.append(messageTypeObj)
+            cls.messageList.append([])
             mock_subscriber = rospy.Subscriber(
                 topic, 
-                messageTypeObj, self.mockCallback)
-            self.subscribers.append(mock_subscriber)
+                messageTypeObj, cls.mockCallback)
+            cls.subscribers.append(mock_subscriber)
         
         for topic, messagePackage, messageType in publisher_topics:
             _temp = __import__(messagePackage+'.msg', globals(), locals(), messageType, -1)
             messageTypeObj = getattr(_temp, messageType)
             mock_publisher = rospy.Publisher(topic, messageTypeObj)
-            self.publishers.append(mock_publisher)
+            cls.publishers.append(mock_publisher)
 
-        self.bag_client = actionlib.SimpleActionClient('/test/bag_player', ReplayBagsAction)
-        self.bag_client.wait_for_server()
-        self.goal = ReplayBagsGoal()
-        self.goal.start = True
+        cls.bag_client = actionlib.SimpleActionClient('/test/bag_player', ReplayBagsAction)
+        cls.bag_client.wait_for_server()
+        cls.goal = ReplayBagsGoal()
+        cls.goal.start = True
 
-    def setUp(self):
+    @classmethod
+    def disconnect(cls):
 
-        self.replied = False
-        self.messageList = []
-        self.subscribers = []
-        self.messageTypes= []
-        self.publishers = []
-
-    def tearDown(self):
-
-        for mock_subscriber in self.subscribers:
+        for mock_subscriber in cls.subscribers:
             mock_subscriber.unregister()
-        for mock_publisher in self.publishers:
+        for mock_publisher in cls.publishers:
             mock_publisher.unregister()
 
-    def playFromBag(self, block):
+    @classmethod
+    def playFromBag(cls, block = True):
 
-        self.bag_client.send_goal(self.goal)
+        cls.bag_client.send_goal(cls.goal)
         if block is True:
-            self.bag_client.wait_for_result()
+            cls.bag_client.wait_for_result()
 
