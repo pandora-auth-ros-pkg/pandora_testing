@@ -10,8 +10,6 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   rostest
   rosbag
-  pandora_data_fusion_msgs
-  vision_communications
   message_generation 
   actionlib_msgs 
   std_msgs

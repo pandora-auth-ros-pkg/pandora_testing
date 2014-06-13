@@ -73,17 +73,17 @@ class TestBase(unittest.TestCase):
         rospy.logdebug(self.alertList)
 
     @classmethod
-    def connect(cls, subscriber_topics, publisher_topics):
+    def connect(cls):
 
         cls.state_changer = StateClient(False)
         rospy.sleep(0.1)
         cls.state_changer.transition_to_state(2)
         rospy.sleep(2)
 
-        cls.subscriber_topics = subscriber_topics
-        cls.publisher_topics = publisher_topics
+    def connect(self, subscriber_topics, publisher_topics):
 
-    def setUp(self):
+        self.subscriber_topics = subscriber_topics
+        self.publisher_topics = publisher_topics
 
         self.subscribers = []
         for topic, messagePackage, messageType in self.subscriber_topics:
@@ -93,6 +93,7 @@ class TestBase(unittest.TestCase):
                 topic, 
                 messageTypeObj, self.mockCallback)
             self.subscribers.append(mock_subscriber)
+
         self.alertList = []
         self.replied = False
         
