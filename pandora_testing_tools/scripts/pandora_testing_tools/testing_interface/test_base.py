@@ -72,7 +72,7 @@ class TestBase(unittest.TestCase):
             if isinstance(data, self.messageTypes[i]):
                 self.messageList[i].append(data)
         self.replied = True
-        rospy.logdebug(data)
+        #rospy.logdebug(data)
 
     @classmethod
     def establishConnection(cls):
