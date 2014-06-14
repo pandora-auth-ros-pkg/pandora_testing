@@ -53,7 +53,12 @@ from geometry_msgs.msg import Point
 
 def distance(a, b):
 
-    return math.sqrt( (a.x - b.x)**2 + (a.y - b.y)**2 + (a.z - b.z)**2 )
+    return math.sqrt((a.x - b.x)**2 + (a.y - b.y)**2 + (a.z - b.z)**2)
+
+def isSameOrientation(a, b):
+
+    distance = math.sqrt((a.x - b.x)**2 + (a.y - b.y)**2 + (a.z - b.z)**2 + (a.w - b.w)**2)
+    return distance == 0
 
 def direction(a, b):
         
@@ -77,7 +82,6 @@ class TestBase(unittest.TestCase):
     @classmethod
     def connect(cls, subscriber_topics, publisher_topics):
 
-        cls.state_changer = StateClient(False)
         cls.state_changer.transition_to_state(2)
 
         cls.replied = False

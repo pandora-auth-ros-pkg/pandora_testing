@@ -48,37 +48,187 @@ import rostest
 import rospy
 
 from pandora_testing_tools.testing_interface import test_base
+from pandora_testing_tools.mocks import mock_navigation
+from pandora_testing_tools.mocks import mock_gui
+from pandora_data_fusion_msgs.srv import GetObjectsSrv
+from pandora_data_fusion_msgs.srv import GetObjectsSrvResponse
+from state_manager_communications.msg import robotModeMsg
 
 class DataFusionAgentTest(test_base.TestBase):
 
-    def test_first_hole_is_targeted(self):
+    def setUp(self):
 
-        pass
-
-    def test_hole_is_reached(self):
-
-        pass
+        self.get_objects = rospy.ServiceProxy('/data_fusion/get_objects', GetObjectsSrv, True)
+        rospy.wait_for_service('/data_fusion/get_objects')
+        self.mockNavigation = mock_navigation.MockNavigation()
+        self.mockGui = mock_gui.MockGui()
+        self.deliveryBoy = alert_delivery.AlertDeliveryBoy()
 
     def test_hole_is_verified(self):
+        
+        #  A hole is found.
+        self.deliveryBoy.deliverHoleAlert(yaw = 0, pitch = 0, probability = 0.8)
+        self.deliveryBoy.deliverHoleAlert(yaw = 0, pitch = 0, probability = 0.9)
+        #  Qualifies to a victim and is sent to agent.
+        self.assertEqual(1, len(self.messageList[1][0].victims))
+        outs = self.get_objects()
+        self.assertEqual(1, len(outs.holes))
+        self.assertEqual(0, len(outs.faces))
+        self.assertEqual(1, len(outs.victimsToGo))
+        self.assertEqual(0, len(outs.victimsVisited))
+        victimPose = outs.victimsToGo[0].pose
+        rospy.sleep(1)
 
-        pass
+        #  Agent recognises new victim and orders navigation to go to it.
+        self.assertEqual(3, self.messageList[0][-1].mode)
+        self.assertTrue(self.mockNavigation.movedBase)
+        self.mockNavigation.move_base_succedes = True
+        self.assertEqual(0, self.mockNavigation.preempted)
+        self.assertEqual(0, 
+            test_base.distance(victimPose.position, self.mockNavigation.target_position))
+        self.assertTrue(test_base.isSameOrientation(
+          victimPose.orientation, self.mockNavigation.target_orientation))
+        self.mockNavigation.reply = True
+        rospy.sleep(1)
 
-    def test_hole_is_updated(self):
+        #  Navigation went to the victim and a face is associated with the victim.
+        self.assertEqual(4, self.messageList[0][-1].mode)
+        self.deliveryBoy.deliverFaceAlert(yaw = 0, pitch = 0, probability = 0.85)
+        outs = self.get_objects()
+        self.assertEqual(1, len(outs.holes))
+        self.assertEqual(1, len(outs.faces))
+        self.assertEqual(1, len(outs.victimsToGo))
+        self.assertEqual(0, len(outs.victimsVisited))
+        victimBefore = outs.victimsToGo[0].pose.position
+        self.assertEqual(1, len(self.messageList[1][-1].victims))
+        victim_probability = self.messageList[1][-1].victims[0].probability
+        rospy.sleep(1)
 
-        pass
+        #  Agent recognises the change in victim and verifies it. Asks Gui for
+        #  validation. Gui validates the victim.
+        self.mockGui.victimValid = True
+        self.assertEqual(victim_probability, self.mockGui.probability)
+        self.assertEqual(["FACE"], self.mockGui.sensorIDsFound)
+        self.mockGui.reply = True
+        rospy.sleep(1)
 
-    def test_hole_is_not_reached(self):
+        #  Agent informs Data Fusion of victim's validation status and orders
+        #  navigation to explore. Victim is transfered to victimsVisited list.
+        self.assertEqual(2, self.messageList[0][-1].mode)
+        self.assertTrue(self.mockNavigation.enteredExploration)
+        outs = self.get_objects()
+        self.assertEqual(1, len(outs.holes))
+        self.assertEqual(1, len(outs.faces))
+        self.assertEqual(0, len(outs.victimsToGo))
+        self.assertEqual(1, len(outs.victimsVisited))
+        victimAfter = outs.victimsVisited[0].pose.position
+        self.assertEqual(0, test_base.distance(victimBefore, victimAfter))
+        rospy.sleep(1)
 
-        pass
+        #  Another hole is detected and qualifies to victim.
+        self.deliveryBoy.deliverHoleAlert(yaw = -1, pitch = 0, probability = 0.5)
+        self.deliveryBoy.deliverHoleAlert(yaw = -1, pitch = 0, probability = 0.8)
+        self.assertEqual(1, len(self.messageList[1][-1].victims))
+        outs = self.get_objects()
+        self.assertEqual(2, len(outs.holes))
+        self.assertEqual(1, len(outs.faces))
+        self.assertEqual(1, len(outs.victimsToGo))
+        self.assertEqual(1, len(outs.victimsVisited))
+        victimPose = outs.victimsToGo[0].pose
+        rospy.sleep(1)
+
+        #  Agent is informed and orders navigation to go to it but navigation
+        #  aborts the order...
+        self.assertEqual(3, self.messageList[0][-1].mode)
+        self.assertTrue(self.mockNavigation.movedBase)
+        self.mockNavigation.move_base_succedes = False
+        self.assertEqual(0, self.mockNavigation.preempted)
+        self.assertEqual(0, 
+            test_base.distance(victimPose.position, self.mockNavigation.target_position))
+        self.assertTrue(test_base.isSameOrientation(
+          victimPose.orientation, self.mockNavigation.target_orientation))
+        self.mockNavigation.reply = True
+        rospy.sleep(1)
+
+        #  Agents acknowledges victim as potential noise and orders Data Fusion
+        #  to delete it. Navigation is ordered to return to exploration.
+        self.assertEqual(2, self.messageList[0][-1].mode)
+        self.assertTrue(self.mockNavigation.enteredExploration)
+        outs = self.get_objects()
+        self.assertEqual(1, len(outs.holes))
+        self.assertEqual(1, len(outs.faces))
+        self.assertEqual(0, len(outs.victimsToGo))
+        self.assertEqual(1, len(outs.victimsVisited))
+        rospy.sleep(1)
+
+        #  Another hole is detected and qualifies to a victim.
+        self.deliveryBoy.deliverHoleAlert(yaw = 1, pitch = 0, probability = 0.8)
+        self.deliveryBoy.deliverHoleAlert(yaw = 1, pitch = 0, probability = 0.8)
+        self.assertEqual(1, len(self.messageList[1][-1].victims))
+        outs = self.get_objects()
+        self.assertEqual(2, len(outs.holes))
+        self.assertEqual(1, len(outs.faces))
+        self.assertEqual(1, len(outs.victimsToGo))
+        self.assertEqual(1, len(outs.victimsVisited))
+        victimPose = outs.victimsToGo[0].pose
+        rospy.sleep(1)
+
+        #  Agent recognises new victim and orders navigation to go to it.
+        self.assertEqual(3, self.messageList[0][-1].mode)
+        self.assertTrue(self.mockNavigation.movedBase)
+        self.assertEqual(0, self.mockNavigation.preempted)
+        self.assertEqual(0, 
+            test_base.distance(victimPose.position, self.mockNavigation.target_position))
+        self.assertTrue(test_base.isSameOrientation(
+          victimPose.orientation, self.mockNavigation.target_orientation))
+        rospy.sleep(1)
+
+        #  Current victim is thought to be displaced.
+        self.deliveryBoy.deliverHoleAlert(yaw = 0.97, pitch = 0, probability = 0.9)
+        self.deliveryBoy.deliverHoleAlert(yaw = 0.95, pitch = 0, probability = 0.9)
+        self.deliveryBoy.deliverHoleAlert(yaw = 0.94, pitch = 0, probability = 0.9)
+        self.assertEqual(1, len(self.messageList[1][-1].victims))
+        outs = self.get_objects()
+        self.assertEqual(2, len(outs.holes))
+        self.assertEqual(1, len(outs.faces))
+        self.assertEqual(1, len(outs.victimsToGo))
+        self.assertEqual(1, len(outs.victimsVisited))
+        victimPose = outs.victimsToGo[0].pose
+        rospy.sleep(1)
+
+        #  Agent think that displacement cannot be ignored and re-orders navigation.
+        #  Navigation target has changed.
+        self.assertEqual(3, self.messageList[0][-1].mode)
+        self.assertTrue(self.mockNavigation.movedBase)
+        self.assertEqual(1, self.mockNavigation.preempted)
+        self.assertEqual(0, 
+            test_base.distance(victimPose.position, self.mockNavigation.target_position))
+        self.assertTrue(test_base.isSameOrientation(
+          victimPose.orientation, self.mockNavigation.target_orientation))
+        self.mockNavigation.move_base_succedes = True
+        self.mockNavigation.reply = True
+        rospy.sleep(1)
+
+        #  Agent waits for verification but victim fails to verify...
+        #  Agent orders Data Fusion to think this victim as non valid.
+        #  Navigation returns to exploration.
+        rospy.sleep(15)
+        self.assertEqual(2, self.messageList[0][-1].mode)
+        self.assertTrue(self.mockNavigation.enteredExploration)
+        outs = self.get_objects()
+        self.assertEqual(2, len(outs.holes))
+        self.assertEqual(1, len(outs.faces))
+        self.assertEqual(0, len(outs.victimsToGo))
+        self.assertEqual(2, len(outs.victimsVisited))
 
 if __name__ == '__main__':
 
     rospy.sleep(15)
     rospy.init_node(NAME, anonymous=True, log_level=rospy.DEBUG)
-    subscriber_topics = [("/data_fusion/world_model", "pandora_data_fusion_msgs", "WorldModelMsg")]
+    subscriber_topics = [
+        ("/robot/state/clients", "state_manager_communications", "robotModeMsg"),
+        ("/data_fusion/world_model", "pandora_data_fusion_msgs", "WorldModelMsg")]
     DataFusionAgentTest.connect(subscriber_topics, list())
-    rospy.loginfo("Playing test bag!")
-    DataFusionAgentTest.playFromBag(block = True)
     rostest.rosrun(PKG, NAME, HoleDataFusionTest, sys.argv)
     DataFusionAgentTest.disconnect()
 
