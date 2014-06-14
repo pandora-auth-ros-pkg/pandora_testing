@@ -78,9 +78,7 @@ class TestBase(unittest.TestCase):
     def connect(cls, subscriber_topics, publisher_topics):
 
         cls.state_changer = StateClient(False)
-        rospy.sleep(0.1)
         cls.state_changer.transition_to_state(2)
-        rospy.sleep(2)
 
         cls.replied = False
         cls.messageList = []
