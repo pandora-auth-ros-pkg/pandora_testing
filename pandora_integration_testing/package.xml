@@ -25,6 +25,9 @@
   <run_depend>rostest</run_depend> 
   <run_depend>roslib</run_depend> 
 
+  <run_depend>state_manager</run_depend>
+  <run_depend>state_manager_communications</run_depend>
+  <run_depend>pandora_common_msgs</run_depend>
   <run_depend>vision_communications</run_depend>
   <run_depend>pandora_vision_hole_detector</run_depend>
   <run_depend>pandora_vision_face</run_depend>
