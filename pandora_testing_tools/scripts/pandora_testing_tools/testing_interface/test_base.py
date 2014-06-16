@@ -80,10 +80,14 @@ class TestBase(unittest.TestCase):
         cls.replied = True
 
     @classmethod
-    def connect(cls, subscriber_topics, publisher_topics):
+    def connect(cls, subscriber_topics, publisher_topics, state=2, with_bag=True):
 
-        cls.state_changer = StateClient(False)
-        cls.state_changer.transition_to_state(2)
+        rospy.loginfo("yaw!")
+        cls.state_changer = StateClient()
+        cls.state_changer.client_initialize()
+        rospy.sleep(0.1)
+        cls.state_changer.transition_to_state(state)
+        rospy.loginfo("yaw1!")
 
         cls.replied = False
         cls.messageList = []
@@ -100,17 +104,22 @@ class TestBase(unittest.TestCase):
                 topic, 
                 messageTypeObj, cls.mockCallback)
             cls.subscribers.append(mock_subscriber)
+        rospy.loginfo("yaw2!")
         
         for topic, messagePackage, messageType in publisher_topics:
             _temp = __import__(messagePackage+'.msg', globals(), locals(), messageType, -1)
             messageTypeObj = getattr(_temp, messageType)
             mock_publisher = rospy.Publisher(topic, messageTypeObj)
             cls.publishers.append(mock_publisher)
+        rospy.loginfo("yaw3!")
 
-        cls.bag_client = actionlib.SimpleActionClient('/test/bag_player', ReplayBagsAction)
-        cls.bag_client.wait_for_server()
-        cls.goal = ReplayBagsGoal()
-        cls.goal.start = True
+        if with_bag:
+            cls.bag_client = actionlib.SimpleActionClient('/test/bag_player', ReplayBagsAction)
+            cls.bag_client.wait_for_server()
+            cls.goal = ReplayBagsGoal()
+            cls.goal.start = True
+        rospy.loginfo("yaw4!")
+        rospy.sleep(10.)
 
     @classmethod
     def disconnect(cls):

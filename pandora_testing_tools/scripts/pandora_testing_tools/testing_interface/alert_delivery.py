@@ -118,7 +118,7 @@ class AlertDeliveryBoy:
                                        GeneralAlertMsg)
 
     def deliverHoleOrder(self, orderYaw, 
-                        orderPitch, orderId, orderProbability = 1):
+                        orderPitch, orderProbability=1, orderId=1):
 
         self.hole_msg.header.stamp = rospy.get_rostime()
         self.hole_msg.holesDirections = []
@@ -126,8 +126,9 @@ class AlertDeliveryBoy:
                                             pitch = orderPitch,
                                             probability = orderProbability,
                                             holeId = orderId))
+        rospy.logdebug(self.hole_msg)
         self.hole_pub.publish(self.hole_msg)
-        rospy.sleep(0.1)
+        rospy.sleep(0.2)
 
     def deliverHazmatOrder(self, orderYaw, 
                           orderPitch, orderPattern):
