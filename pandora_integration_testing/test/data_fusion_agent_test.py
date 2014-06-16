@@ -62,8 +62,8 @@ class DataFusionAgentTest(test_base.TestBase):
         self.get_objects = rospy.ServiceProxy('/data_fusion/get_objects', GetObjectsSrv, True)
         rospy.wait_for_service('/data_fusion/get_objects')
         self.mockNavigation = mock_navigation.MockNavigation(
-            do_exploration_topic = '/navigation/do_exploration'
-            move_base_topic = '/navigation/move_base')
+            do_exploration_topic = '/navigation/do_exploration',
+            move_base_topic = '/move_base')
         self.mockGui = mock_gui.MockGui(
             gui_validation_topic = '/gui/validate_victim')
         self.deliveryBoy = alert_delivery.AlertDeliveryBoy()
@@ -75,6 +75,9 @@ class DataFusionAgentTest(test_base.TestBase):
 
     def test_part_1(self):
         
+        #  Changes robot state to start.
+        self.state_changer.transition_to_state(
+            robotModeMsg.MODE_START_AUTONOMOUS)
         #  A hole is found.
         self.deliveryBoy.deliverHoleAlert(yaw = 0, pitch = 0, probability = 0.8)
         self.deliveryBoy.deliverHoleAlert(yaw = 0, pitch = 0, probability = 0.9)
@@ -262,6 +265,6 @@ if __name__ == '__main__':
         ("/robot/state/clients", "state_manager_communications", "robotModeMsg"),
         ("/data_fusion/world_model", "pandora_data_fusion_msgs", "WorldModelMsg")]
     DataFusionAgentTest.connect(subscriber_topics, list())
-    rostest.rosrun(PKG, NAME, HoleDataFusionTest, sys.argv)
+    rostest.rosrun(PKG, NAME, DataFusionAgentTest, sys.argv)
     DataFusionAgentTest.disconnect()
 
