@@ -82,6 +82,7 @@ class TestBase(unittest.TestCase):
     @classmethod
     def connect(cls, subscriber_topics, publisher_topics):
 
+        cls.state_changer = StateClient(False)
         cls.state_changer.transition_to_state(2)
 
         cls.replied = False
