@@ -90,3 +90,8 @@ class MockGui():
         result = ValidateVictimGUIResult(victimValid = self.victimValid) 
         self.gui_validate_victim_as_.set_succeeded(result)
 
+if __name__ == '__main__':
+
+    rospy.sleep(0.5)
+    rospy.init_node('MockGui', anonymous=True)
+    gui = MockGui(gui_validation_topic = '/gui/validate_victim')

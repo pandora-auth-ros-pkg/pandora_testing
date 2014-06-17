@@ -10,6 +10,7 @@
     name="world2map" args="0 0 0 0 0 0 /world /map 100" />
 
   <include file="$(find pandora_data_fusion_launchers)/launch/data_fusion_standalone.launch" />
+  <rosparam param="subscribed_topic_names/map" ns="data_fusion/alert_handler">/map</rosparam>
 
   <node pkg="pandora_fsm" type="robocup_agent.py" name="agent" output="screen" />
 

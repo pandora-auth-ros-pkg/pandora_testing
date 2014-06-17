@@ -40,6 +40,7 @@ import rospy
 from actionlib import SimpleActionServer
 
 from geometry_msgs.msg import Point
+from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import Quaternion
 from move_base_msgs.msg import MoveBaseAction, MoveBaseFeedback, MoveBaseResult
 from pandora_navigation_msgs.msg import DoExplorationAction, \
@@ -48,6 +49,8 @@ from pandora_navigation_msgs.msg import DoExplorationAction, \
 class MockNavigation():
 
     def __init__(self, do_exploration_topic, move_base_topic):
+
+        self.robot_pose_ = PoseStamped()
 
         self.navigation_succedes = True
         self.reply = False
@@ -84,27 +87,28 @@ class MockNavigation():
         self.entered_exploration = True
         while not self.reply:
             rospy.sleep(0.2)
-            self.robot_pose_.pose.position.x += 0.1
-            self.robot_pose_.pose.position.y += 0.05
-            feedback = DoExplorationFeedback()
-            feedback.base_position.pose.position.x = \
-                self.robot_pose_.pose.position.x
-            feedback.base_position.pose.position.y = \
-                self.robot_pose_.pose.position.y
-            self.do_exploration_as_.publish_feedback(feedback)
+            #self.robot_pose_.pose.position.x += 0.1
+            #self.robot_pose_.pose.position.y += 0.05
+            #feedback = DoExplorationFeedback()
+            #feedback.base_position.pose.position.x = \
+            #    self.robot_pose_.pose.position.x
+            #feedback.base_position.pose.position.y = \
+            #    self.robot_pose_.pose.position.y
+            #self.do_exploration_as_.publish_feedback(feedback)
             if self.do_exploration_as_.is_preempt_requested():
                 self.preempted += 1
                 self.entered_exploration = False
                 self.do_exploration_as_.set_preempted()
-                return
-        result = DoExplorationResult()
-        self.reply = False
-        self.preempted = 0
-        self.entered_exploration = False
-        if self.navigation_succedes:
-            self.do_exploration_as_.set_succeded(result) 
+                break
         else:
-            self.do_exploration_as_.set_aborted(result)
+            result = DoExplorationResult()
+            self.reply = False
+            self.preempted = 0
+            self.entered_exploration = False
+            if self.navigation_succedes:
+                self.do_exploration_as_.set_succeded(result) 
+            else:
+                self.do_exploration_as_.set_aborted(result)
 
     def move_base_cb(self, goal):
         rospy.loginfo('move_base_cb')
@@ -114,31 +118,40 @@ class MockNavigation():
         self.moved_base = True
         while not self.reply:
             rospy.sleep(0.2)
-            self.robot_pose_.pose.position.x += 0.1
-            self.robot_pose_.pose.position.y += 0.05
-            feedback = MoveBaseFeedback()
-            feedback.base_position.pose.position.x = \
-                self.robot_pose_.pose.position.x
-            feedback.base_position.pose.position.y = \
-                self.robot_pose_.pose.position.y
-            self.move_base_as_.publish_feedback(feedback)
+            #self.robot_pose_.pose.position.x += 0.1
+            #self.robot_pose_.pose.position.y += 0.05
+            #feedback = MoveBaseFeedback()
+            #feedback.base_position.pose.position.x = \
+            #    self.robot_pose_.pose.position.x
+            #feedback.base_position.pose.position.y = \
+            #    self.robot_pose_.pose.position.y
+            #self.move_base_as_.publish_feedback(feedback)
             if self.move_base_as_.is_preempt_requested():
                 self.preempted += 1
                 self.moved_base = False
                 self.move_base_as_.set_preempted()
-                return
+                break
             if self.move_base_as_.is_new_goal_available():
                 self.preempted += 1
                 self.move_base_cb(self.move_base_as_.accept_new_goal())
-                return
-        result = MoveBaseResult()
-        self.reply = False
-        self.preempted = 0
-        self.moved_base = False
-        self.target_position = Point()
-        self.target_orientation = Quaternion() 
-        if self.navigation_succedes:
-            self.move_base_as_.set_succeeded(result)
+                break
         else:
-            self.move_base_as_.set_aborted(result)
+            result = MoveBaseResult()
+            self.reply = False
+            self.preempted = 0
+            self.moved_base = False
+            self.target_position = Point()
+            self.target_orientation = Quaternion() 
+            if self.navigation_succedes:
+                self.move_base_as_.set_succeeded(result)
+            else:
+                self.move_base_as_.set_aborted(result)
     
+if __name__ == '__main__':
+
+    rospy.sleep(0.5)
+    rospy.init_node('MockNavigation', anonymous=True)
+    navigation = MockNavigation(
+        do_exploration_topic = '/navigation/do_exploration',
+        move_base_topic = '/move_base')
+
