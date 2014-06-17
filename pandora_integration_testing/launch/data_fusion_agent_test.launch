@@ -15,6 +15,6 @@
   <node pkg="pandora_fsm" type="robocup_agent.py" name="agent" output="screen" />
 
   <test test-name="DataFusionAgentTest" pkg="pandora_integration_testing"
-    type="data_fusion_agent_test.py" time-limit="120" />
+    type="data_fusion_agent_test.py" time-limit="180" />
 
 </launch>
