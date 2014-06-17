@@ -69,26 +69,24 @@ class MockGui():
     def gui_validate_victim_cb(self, goal):
         rospy.loginfo('gui_validate_victim_cb')
 
+        self.reply = False
+        
         self.victimFoundx = goal.victimFoundx
         self.victimFoundy = goal.victimFoundy
         self.probability = goal.probability
         self.sensorIDsFound = goal.sensorIDsFound
 
         while not self.reply:
-            rospy.sleep(0.2)
+            rospy.sleep(0.5)
 
             if self.gui_validate_victim_as_.is_preempt_requested():
                 preempted += 1
                 self.gui_validate_victim_as_.set_preempted()
-                return
-        self.reply = False
-        self.preempted = 0
-        self.victimFoundx = 0
-        self.victimFoundy = 0
-        self.probability = 0
-        self.sensorIDsFound = []
-        result = ValidateVictimGUIResult(victimValid = self.victimValid) 
-        self.gui_validate_victim_as_.set_succeeded(result)
+                break
+        else:
+            self.preempted = 0
+            result = ValidateVictimGUIResult(victimValid = self.victimValid) 
+            self.gui_validate_victim_as_.set_succeeded(result)
 
 if __name__ == '__main__':
 
