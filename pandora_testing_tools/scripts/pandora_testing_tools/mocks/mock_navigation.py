@@ -52,12 +52,13 @@ class MockNavigation():
     def __init__(self, do_exploration_topic, move_base_topic):
 
         self.robot_pose_ = PoseStamped()
+        self.listener = tf.TransformListener()
 
         self.navigation_succedes = True
         self.reply = False
         self.preempted = 0
         
-        self.moved_base = False
+        self.moves_base = False
         self.target_position = Point()
         self.target_orientation = Quaternion() 
         
@@ -88,8 +89,7 @@ class MockNavigation():
         self.entered_exploration = True
         while not self.reply:
             rospy.sleep(0.2)
-            listner = tf.TransformListener()
-            (trans, rot) = listener.lookupTransform('/map', '/base_footprint', rospy.Time(0))
+            (trans, rot) = self.listener.lookupTransform('/map', '/base_footprint', rospy.Time(0))
             self.robot_pose_.pose.position.x = trans[0]
             self.robot_pose_.pose.position.y = trans[1]
             rospy.loginfo(str(trans[0])+' ' +str(trans[1]))
@@ -119,20 +119,22 @@ class MockNavigation():
 
         self.target_position = goal.target_pose.pose.position
         self.target_orientation = goal.target_pose.pose.orientation
-        self.moved_base = True
+        self.moves_base = True
         while not self.reply:
             rospy.sleep(0.2)
-            #self.robot_pose_.pose.position.x += 0.1
-            #self.robot_pose_.pose.position.y += 0.05
-            #feedback = MoveBaseFeedback()
-            #feedback.base_position.pose.position.x = \
-            #    self.robot_pose_.pose.position.x
-            #feedback.base_position.pose.position.y = \
-            #    self.robot_pose_.pose.position.y
-            #self.move_base_as_.publish_feedback(feedback)
+            (trans, rot) = self.listener.lookupTransform('/map', '/base_footprint', rospy.Time(0))
+            self.robot_pose_.pose.position.x = trans[0]
+            self.robot_pose_.pose.position.y = trans[1]
+            rospy.loginfo(str(trans[0])+' ' +str(trans[1]))
+            feedback = MoveBaseFeedback()
+            feedback.base_position.pose.position.x = \
+                self.robot_pose_.pose.position.x
+            feedback.base_position.pose.position.y = \
+                self.robot_pose_.pose.position.y
+            self.move_base_as_.publish_feedback(feedback)
             if self.move_base_as_.is_preempt_requested():
                 self.preempted += 1
-                self.moved_base = False
+                self.moves_base = False
                 self.move_base_as_.set_preempted()
                 break
             if self.move_base_as_.is_new_goal_available():
@@ -143,7 +145,7 @@ class MockNavigation():
             result = MoveBaseResult()
             self.reply = False
             self.preempted = 0
-            self.moved_base = False
+            self.moves_base = False
             self.target_position = Point()
             self.target_orientation = Quaternion() 
             if self.navigation_succedes:
