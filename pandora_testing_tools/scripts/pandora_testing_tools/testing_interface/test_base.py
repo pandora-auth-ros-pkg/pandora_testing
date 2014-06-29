@@ -59,14 +59,14 @@ def distance(a, b):
 
 def isOrientationReversed(a, b):
 
-    roll, pitch, yaw = euler_from_quaternion(a)
+    roll, pitch, yaw = euler_from_quaternion([a.x, a.y, a.z, a.w])
     reversed_a = quaternion_from_euler(roll, pitch, yaw + math.pi)
-    distance = math.sqrt((reversed_a.x - b.x)**2 + (reversed_a.y - b.y)**2 + (reversed_a.z - b.z)**2 + (reversed_a.w - b.w)**2)
+    distance = math.sqrt((reversed_a[0] - b.x)**2 + (reversed_a[1] - b.y)**2 + (reversed_a[2] - b.z)**2 + (reversed_a[3] - b.w)**2)
     return distance == 0
 
 def isPositionGrounded(a, b):
 
-    b.z = 0
+    a.z = 0
     return distance(a, b) == 0
 
 def direction(a, b):
